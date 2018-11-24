@@ -2,7 +2,7 @@
   // let view = {
   //   el: '.page > .main',
   let view = {
-    el: '.page > .main',
+    el: '.page > main',
     init() {
       this.$el = $(this.el)
     },

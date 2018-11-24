@@ -5,7 +5,11 @@
       return $(this.el).find(selector)[0]
     }
   }
-  let model = {}
+  let model = {
+    data: {
+      status: 'open'
+    }
+  }
   let controller = {
     init(view, model) {
       this.view = view
@@ -27,14 +31,25 @@
           'FilesAdded': function (up, files) {
             plupload.each(files, function (file) {});
           },
-          'BeforeUpload': function (up, file) {
+          'BeforeUpload': (up, file) => {
+            // 每个文件上传前,处理相关的事情
+            window.eventHub.emit('beforeUpload')
+            if (this.model.data.status === 'closed') {
+              return false
+            } else {
+              this.model.data.status = 'closed'
+              return true
+            }
             // 每个文件上传前,处理相关的事情
           },
-          // 'UploadProgress': function(up, file) {
-          //   // 每个文件上传时,处理相关的事情
-          //   uploadStatus.textContent = '上传中'
-          // },
-          'FileUploaded': function (up, file, info) {
+          'UploadProgress': function (up, file) {
+            // 每个文件上传时,处理相关的事情
+          },
+
+          // 文件上传成功之后调用 FileUploaded
+          'FileUploaded': (up, file, info) => {
+            window.eventHub.emit('afterUpload')
+            this.model.data.status = 'open'
             var domain = up.getOption('domain');
             var response = JSON.parse(info.response);
             var sourceLink = domain + '/' + encodeURIComponent(response.key);
@@ -42,10 +57,8 @@
               url: sourceLink,
               name: response.key
             })
-            // uploadStatus.textContent = sourceLink + '' + response.key;
-            console.log(sourceLink)
 
-            //获取上传成功后的文件的Url
+
           },
           'Error': function (up, err, errTip) {
             //上传出错时,处理相关的事情
